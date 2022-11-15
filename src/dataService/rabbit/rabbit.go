@@ -1,4 +1,4 @@
-package dataService
+package rabbit
 
 import (
 	"context"
@@ -7,23 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
+
+	bard "launch_school/bard_agent_api/src/structs"
 )
 
-func handleEvents(c *gin.Context, body RecordBody) error {
-	// conn, err := clickhouse.Open(&clickhouse.Options{
-	// 	Addr: []string{fmt.Sprintf("%s:%d", os.Getenv("CLICKHOUSE_HOST"), 8123)},
-	// 	Auth: clickhouse.Auth{
-	// 		Database: "eventDb",
-	// 		Username: "default",
-	// 		Password: "",
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
-	fmt.Println("connected to clickhouse!")
+func SendEventsToQueue(body bard.RecordBody) error {
 	rabbit, err := amqp.Dial(fmt.Sprintf("amqp://%s:5672", os.Getenv("RABBITMQ_HOST")))
 	if err != nil {
 		return err
@@ -78,7 +67,7 @@ func handleEvents(c *gin.Context, body RecordBody) error {
 		eventJsonString := string(encodedEventJsonString)
 
 		//build and serialize the queue message
-		queueMessage := QueueMessage{sessionId, eventJsonString}
+		queueMessage := bard.QueueMessage{SessionId: sessionId, Event: eventJsonString}
 		encodedQueueMessage, err := json.Marshal(queueMessage)
 		if err != nil {
 			return err
@@ -109,10 +98,5 @@ func handleEvents(c *gin.Context, body RecordBody) error {
 		// 	return err
 		// }
 	}
-
-	// //send off our built batch
-	// if err := batch.Send(); err != nil {
-	// 	return err
-	// }
 	return nil
 }

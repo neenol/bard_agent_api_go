@@ -1,7 +1,5 @@
 package main
 
-//getting an error here, but it must be something with the extension
-//because the code runs just fine
 import (
 	"fmt"
 
