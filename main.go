@@ -4,8 +4,10 @@ package main
 //because the code runs just fine
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -20,6 +22,13 @@ type RecordBody struct {
 	SessionId     string                   `binding:"required"`
 	Events        []map[string]interface{} `binding:"required"`
 	MAX_IDLE_TIME uint32                   `binding:"required"`
+}
+
+// this is why go allows us to use different names for json keys and struct keys:
+// keys in structs need to be capitalized.
+type QueueMessage struct {
+	SessionId string `json:"sessionId" binding:"required"`
+	Event     string `json:"event" binding:"required"`
 }
 
 func main() {
@@ -83,7 +92,7 @@ func send404Res(c *gin.Context, msg string) {
 }
 
 func send500Res(c *gin.Context, msg string) {
-	c.JSON(404, msg)
+	c.JSON(500, msg)
 }
 
 func send200Res(c *gin.Context, msg string) {
@@ -107,6 +116,7 @@ func handleEvents(c *gin.Context, body RecordBody) error {
 	if err != nil {
 		return err
 	}
+	defer rabbit.Close()
 	fmt.Println("connected to rabbit!")
 	channel, err := rabbit.Channel()
 	if err != nil {
@@ -114,7 +124,15 @@ func handleEvents(c *gin.Context, body RecordBody) error {
 	}
 	fmt.Println("rabbit channel established!")
 	defer channel.Close()
-	if err := channel.ExchangeDeclare("test-exchange", "fanout", true, false, false, false, nil); err != nil {
+	if err := channel.ExchangeDeclare(
+		"test-exchange",
+		"fanout",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	); err != nil {
 		return err
 	}
 	fmt.Println("Rabbit exchange created!")
@@ -126,27 +144,47 @@ func handleEvents(c *gin.Context, body RecordBody) error {
 	// fmt.Println("initialized batch!")
 	sessionId := body.SessionId
 	events := body.Events
-	maxIdleTime := body.MAX_IDLE_TIME
-	fmt.Println("the gangs all here!", sessionId, events, maxIdleTime)
 	for i := 0; i < len(events); i++ {
-		//we can access all fields of the event using this event object.
-		//But, go doesn't know that event["data"] is another map, so we
-		//need to tell it that. If we try to access non-existent values,
-		//they come up as nil
-		var event = events[i]
-		var data = event["data"].(map[string]interface{})
-		fmt.Println("parsed data", data)
-		//TODO: the js version of the code turns stringified json into a buffer.
-		//need to find out how to do both of those things...
+		//The queue needs a byte array that represents a stringified json object with the following format
+		// {
+		// 	sessionId: string,
+		// 	event: string
+		// }
+		//the event is a stringified json representation of the event. so we need to
+		// transform the event from a map into a json string
+		//build a message object
+		//turn that message object into a jso nstring
+		//turn that string into a byte array
+
+		//first, build the stringified json. marshall creates a byte array of the json string.
+		var eventMap = events[i]
+		encodedEventJsonString, err := json.Marshal(eventMap)
+		if err != nil {
+			return err
+		}
+		//turn the byte array back into a string. we need that for the message obj, NOT a byte arr
+		eventJsonString := string(encodedEventJsonString)
+
+		//build and serialize the queue message
+		queueMessage := QueueMessage{sessionId, eventJsonString}
+		encodedQueueMessage, err := json.Marshal(queueMessage)
+		if err != nil {
+			return err
+		}
+
+		//publish the event
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		if err := channel.PublishWithContext(
-			context.Background(),
+			ctx,
 			"test-exchange",
 			"",
-			true,
-			true,
+			false,
+			false,
 			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(event), //this is wrong
+				ContentType:  "application/json",
+				DeliveryMode: amqp.Persistent,
+				Body:         encodedQueueMessage,
 			},
 		); err != nil {
 			return err
