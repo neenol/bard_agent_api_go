@@ -8,6 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//TODO: better typing for events
+//odd, looks like properties need to have the first letter capitalized
+//in order for gin's binding functions to work...
+type RecordBody struct {
+	SessionId string `binding:"required"`;
+	Events []string ` binding:"required"`;
+	MAX_IDLE_TIME uint32 `binding:"required"`;
+}
+
 func main() {
 	r := gin.Default()
 	//basic path
@@ -31,5 +40,30 @@ func main() {
 		queue := c.Query("queue")
 		fmt.Println("db is", db, "and queue is", queue)
 	})
-	r.Run(":3000")
+
+	r.POST("/record", func(c *gin.Context) {
+		//tried to use bindHeader to do this and couldn't get it to work
+		appName := c.GetHeader("appname")
+		if appName == "" {
+			send404Res(c, "bad request: no appname header")
+			return
+		}
+
+		//get the body
+		var body RecordBody
+		if err := c.BindJSON(&body); err != nil {
+			msg :=fmt.Sprintf("Bad request: invalid body. %s", err)
+			send404Res(c, msg)
+			return
+		}
+		sessionId := body.SessionId
+		events := body.Events
+		maxIdleTime := body.MAX_IDLE_TIME
+		fmt.Println("the gangs all here!", sessionId, events, maxIdleTime)
+	})
+	r.Run(":3001")
+}
+
+func send404Res(c *gin.Context, msg string) {
+	c.JSON(404, msg)
 }
