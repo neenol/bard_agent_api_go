@@ -57,7 +57,7 @@ func main() {
 		}
 
 		//handle our events
-		if err := dataService.HandleEvents(c, body); err != nil {
+		if err := dataService.HandleEvents(c, body, appName); err != nil {
 			msg := fmt.Sprintf("Event handling error. %s", err)
 			send500Res(c, msg)
 			return
