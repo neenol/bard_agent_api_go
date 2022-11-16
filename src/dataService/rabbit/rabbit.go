@@ -18,12 +18,10 @@ func SendEventsToQueue(body bard.RecordBody) error {
 		return err
 	}
 	defer rabbit.Close()
-	fmt.Println("connected to rabbit!")
 	channel, err := rabbit.Channel()
 	if err != nil {
 		return err
 	}
-	fmt.Println("rabbit channel established!")
 	defer channel.Close()
 	if err := channel.ExchangeDeclare(
 		"test-exchange",
@@ -37,12 +35,6 @@ func SendEventsToQueue(body bard.RecordBody) error {
 		return err
 	}
 	fmt.Println("Rabbit exchange created!")
-	//prepare a clickhouse batch
-	// batch, err := conn.PrepareBatch(context.Background(), "INSERT INTO eventTable")
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Println("initialized batch!")
 	sessionId := body.SessionId
 	events := body.Events
 	for i := 0; i < len(events); i++ {
@@ -90,13 +82,6 @@ func SendEventsToQueue(body bard.RecordBody) error {
 		); err != nil {
 			return err
 		}
-		//build a batch to send all event data to ch at once.
-		// if err := batch.Append(
-		// 	sessionId,
-		// 	event,
-		// ); err != nil {
-		// 	return err
-		// }
 	}
 	return nil
 }
