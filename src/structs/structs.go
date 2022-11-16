@@ -19,9 +19,9 @@ type QueueMessage struct {
 
 type PgSessionMetadata struct {
 	SessionId           string
-	StartTime           uint32
+	StartTime           uint64
 	AppName             string
-	MostRecentEventTime uint32
+	MostRecentEventTime uint64
 	ErrorCount          uint16
 	MaxIdleTime         uint32
 }

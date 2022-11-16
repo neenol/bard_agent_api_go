@@ -52,20 +52,21 @@ func GetSessionMetadata(sessionId string) (bard.PgSessionMetadata, error) {
 	defer client.disconnect()
 
 	//TODO: sanitize db input
+	//don't use parens in query when defining columns, go considers that to be
+	//one value instead of 5, which throws off deserializing the result
 	query := fmt.Sprintf(
 		`SELECT 
-		(start_time, app_name, most_recent_event_time, error_count, max_idle_time) 
+		start_time, app_name, most_recent_event_time, error_count, max_idle_time
 		FROM pending_sessions WHERE session_id='%s';`,
 		sessionId,
 	)
-	fmt.Println("pg query", query)
 	row := client.Db.QueryRow(query)
-	fmt.Println("row from query", row)
+
 	//parse the data
 	var (
-		startTime           uint32
+		startTime           uint64
 		appName             string
-		mostRecentEventTime uint32
+		mostRecentEventTime uint64
 		errorCount          uint16
 		maxIdleTime         uint32
 	)
@@ -76,7 +77,6 @@ func GetSessionMetadata(sessionId string) (bard.PgSessionMetadata, error) {
 		&errorCount,
 		&maxIdleTime,
 	); err != nil {
-		fmt.Println("didn't find a row in postgres!")
 		//don't actually throw an error if we didn't find a session
 		return metadata, nil
 	}
