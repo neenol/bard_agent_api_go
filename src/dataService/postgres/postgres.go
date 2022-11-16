@@ -70,7 +70,7 @@ func CreateNewSession(body bard.RecordBody, appName string) error {
 	defer client.disconnect()
 
 	sessionId := body.SessionId
-	startTime, err := utils.GetTimestampFromRecordBody(body)
+	startTime, err := utils.GetTimestampFromEvent(body.Events[0])
 	if err != nil {
 		return err
 	}
@@ -88,6 +88,35 @@ func CreateNewSession(body bard.RecordBody, appName string) error {
 		mostRecentEventTime,
 		appName,
 		MAX_IDLE_TIME,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateMostRecentEventTime(body bard.RecordBody) error {
+	client, err := connect()
+	if err != nil {
+		return err
+	}
+	defer client.disconnect()
+
+	sessionId := body.SessionId
+	lastEvent := body.Events[len(body.Events)-1]
+	mostRecentEventTime, err := utils.GetTimestampFromEvent(lastEvent)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE pending_sessions
+						SET most_recent_event_time=$1
+						WHERE session_id=$2;
+						`
+	_, err = client.Db.Exec(
+		query,
+		mostRecentEventTime,
+		sessionId,
 	)
 	if err != nil {
 		return err

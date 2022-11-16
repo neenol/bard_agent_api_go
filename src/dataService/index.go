@@ -16,6 +16,8 @@ import (
 // 4071c287-4b45-4367-8591-node-session is just in ch. (ended)
 // 4071c287-4b45-4367-8590- is just in pg (existing)
 // bluh is in postgres
+
+/*	PUBLIC METHODS	*/
 func HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	metadata, err := getSessionMetadata(body.SessionId)
 	if err != nil {
@@ -29,6 +31,9 @@ func HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	} else {
 		fmt.Println("existing session")
 		//update most recent event time
+		if err := postgres.UpdateMostRecentEventTime(body); err != nil {
+			return err
+		}
 		//update eror count
 		if err := rabbit.SendEventsToQueue(body); err != nil {
 			return err
@@ -38,6 +43,7 @@ func HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	return nil
 }
 
+/*	PRIVATE METHODS	*/
 func getSessionMetadata(sessionId string) (bard.SessionMetadata, error) {
 	var metadata = bard.SessionMetadata{}
 	//TODO: change this
