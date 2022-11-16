@@ -9,6 +9,7 @@ import (
 	"launch_school/bard_agent_api/src/dataService/postgres"
 	"launch_school/bard_agent_api/src/dataService/rabbit"
 	bard "launch_school/bard_agent_api/src/structs"
+	"launch_school/bard_agent_api/src/utils"
 )
 
 // test for this:
@@ -34,7 +35,10 @@ func HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 		if err := postgres.UpdateMostRecentEventTime(body); err != nil {
 			return err
 		}
-		//update eror count
+		//update error count
+		if err := updateErrorCount(body); err != nil {
+			return err
+		}
 		if err := rabbit.SendEventsToQueue(body); err != nil {
 			return err
 		}
@@ -74,4 +78,13 @@ func isNewSession(metadata bard.SessionMetadata) bool {
 
 func isEndedSession(metadata bard.SessionMetadata) bool {
 	return metadata.IsInCh == true
+}
+
+func updateErrorCount(body bard.RecordBody) error {
+	//parse the new number of errors from the events
+	newErrorCount := utils.GetCountOfNewErrorsFromBody(body)
+	sessionId := body.SessionId
+
+	//increment count of errors in postgres
+	return postgres.IncrementErrorCount(sessionId, newErrorCount)
 }

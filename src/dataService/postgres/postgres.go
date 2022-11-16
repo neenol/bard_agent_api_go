@@ -124,6 +124,24 @@ func UpdateMostRecentEventTime(body bard.RecordBody) error {
 	return nil
 }
 
+func IncrementErrorCount(sessionId string, newErrorCount uint16) error {
+	client, err := connect()
+	if err != nil {
+		return err
+	}
+	defer client.disconnect()
+
+	query := `UPDATE pending_sessions
+						SET error_count = error_count + $1
+						WHERE session_id = $2;
+						`
+	_, err = client.Db.Exec(query, newErrorCount, sessionId)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 /*	PRIVATE METHODS	*/
 func connect() (Client, error) {
 	client := Client{}
