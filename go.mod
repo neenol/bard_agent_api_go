@@ -6,6 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.3.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
+	github.com/lib/pq v1.10.7
 	github.com/rabbitmq/amqp091-go v1.5.0
 )
 

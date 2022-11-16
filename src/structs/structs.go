@@ -17,9 +17,18 @@ type QueueMessage struct {
 	Event     string `json:"event" binding:"required"`
 }
 
+type PgSessionMetadata struct {
+	SessionId           string
+	StartTime           uint32
+	AppName             string
+	MostRecentEventTime uint32
+	ErrorCount          uint16
+	MaxIdleTime         uint32
+}
+
 type SessionMetadata struct {
 	IsInPg bool
 	IsInCh bool
 	//TODO: change the type when we know how the pg package works
-	PgMetadata string
+	PgMetadata PgSessionMetadata
 }

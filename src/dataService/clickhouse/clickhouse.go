@@ -8,18 +8,6 @@ import (
 	ch "github.com/ClickHouse/clickhouse-go/v2"
 )
 
-// conn, err := clickhouse.Open(&clickhouse.Options{
-// 	Addr: []string{fmt.Sprintf("%s:%d", os.Getenv("CLICKHOUSE_HOST"), 8123)},
-// 	Auth: clickhouse.Auth{
-// 		Database: "eventDb",
-// 		Username: "default",
-// 		Password: "",
-// 	},
-// })
-// if err != nil {
-// 	return err
-// }
-
 type Client struct {
 	Conn ch.Conn
 }

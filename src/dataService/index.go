@@ -6,16 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"launch_school/bard_agent_api/src/dataService/clickhouse"
+	"launch_school/bard_agent_api/src/dataService/postgres"
 	"launch_school/bard_agent_api/src/dataService/rabbit"
 	bard "launch_school/bard_agent_api/src/structs"
 )
 
+// test for this:
+// 4071c287-4b45-4367-8591-go-session  is in ch and pg.
+// 4071c287-4b45-4367-8591-node-session is just in ch.
+// 4071c287-4b45-4367-8590- is just in pg
 func HandleEvents(c *gin.Context, body bard.RecordBody) error {
 	metadata, err := getSessionMetadata(body.SessionId)
 	if err != nil {
 		return err
 	}
-	fmt.Println("metadata", metadata)
+	fmt.Println("Final metadata", metadata)
 
 	if err := rabbit.SendEventsToQueue(body); err != nil {
 		return err
@@ -28,9 +33,12 @@ func getSessionMetadata(sessionId string) (bard.SessionMetadata, error) {
 	var metadata = bard.SessionMetadata{}
 	//TODO: change this
 	//postgres metadata
-	pgMetadata := "placeholder metadata"
+	pgMetadata, err := postgres.GetSessionMetadata(sessionId)
+	if err != nil {
+		return metadata, err
+	}
 	var isInPg bool
-	if pgMetadata != "" {
+	if pgMetadata.SessionId != "" {
 		isInPg = true
 	}
 
