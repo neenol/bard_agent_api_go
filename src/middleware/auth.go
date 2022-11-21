@@ -17,7 +17,6 @@ func AuthenticateToken() gin.HandlerFunc {
 			return
 		}
 		tokenString := strings.Split(authHeader, " ")[1]
-		fmt.Println("token string", tokenString)
 
 		//parse our token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

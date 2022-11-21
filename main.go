@@ -22,9 +22,6 @@ func main() {
 	}
 	r := gin.Default()
 
-	//recover from code panics by sending a 500 status request
-	r.Use(gin.Recovery())
-
 	r.GET("/authenticate", func(c *gin.Context) {
 		// user := bard.User{}
 		// user.Name = "agent"
