@@ -29,19 +29,20 @@ func HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 		return postgres.CreateNewSession(body, appName)
 	} else if isEndedSession(metadata) {
 		fmt.Println("ended session")
-	} else {
-		fmt.Println("existing session")
-		//update most recent event time
-		if err := postgres.UpdateMostRecentEventTime(body); err != nil {
-			return err
-		}
-		//update error count
-		if err := updateErrorCount(body); err != nil {
-			return err
-		}
-		if err := rabbit.SendEventsToQueue(body); err != nil {
-			return err
-		}
+		return nil
+	}
+
+	fmt.Println("existing session")
+	//update most recent event time
+	if err := postgres.UpdateMostRecentEventTime(body); err != nil {
+		return err
+	}
+	//update error count
+	if err := updateErrorCount(body); err != nil {
+		return err
+	}
+	if err := rabbit.SendEventsToQueue(body); err != nil {
+		return err
 	}
 
 	return nil

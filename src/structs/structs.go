@@ -32,3 +32,7 @@ type SessionMetadata struct {
 	//TODO: change the type when we know how the pg package works
 	PgMetadata PgSessionMetadata
 }
+
+type User struct {
+	Name string
+}

@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.3.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 	github.com/rabbitmq/amqp091-go v1.5.0

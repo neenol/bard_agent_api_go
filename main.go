@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 
 	"launch_school/bard_agent_api/src/dataService"
@@ -38,6 +40,23 @@ func main() {
 		db := c.DefaultQuery("database", "N/A")
 		queue := c.Query("queue")
 		fmt.Println("db is", db, "and queue is", queue)
+	})
+
+	r.GET("/authenticate", func(c *gin.Context) {
+		// user := bard.User{}
+		// user.Name = "agent"
+		token := jwt.New(jwt.SigningMethodHS256)
+		claims := token.Claims.(jwt.MapClaims)
+		claims["authorized"] = true
+		claims["username"] = "agent"
+		tokenString, err := token.SignedString([]byte(os.Getenv("ACCESS_TOKEN_SECRET")))
+		if err != nil {
+			send500Res(c, "failed to create jwt")
+			return
+		}
+		c.JSON(200, gin.H{
+			"accessToken": tokenString,
+		})
 	})
 
 	r.POST("/record", func(c *gin.Context) {
@@ -79,4 +98,8 @@ func send500Res(c *gin.Context, msg string) {
 
 func send200Res(c *gin.Context, msg string) {
 	c.JSON(200, msg)
+}
+
+func send401Res(c *gin.Context, msg string) {
+	c.JSON(401, msg)
 }
