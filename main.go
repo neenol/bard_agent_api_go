@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"launch_school/bard_agent_api/src/dataService"
+	auth "launch_school/bard_agent_api/src/middleware"
 	bard "launch_school/bard_agent_api/src/structs"
 	// TODO: restructure repo so that this module path works
 	// "github.com/neenol/bard_agent_api_go/src/structs"
@@ -20,27 +21,9 @@ func main() {
 		fmt.Println("ERROR: failed to load environment variables.")
 	}
 	r := gin.Default()
-	//basic path
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	//getting a url path param
-	r.GET("/ping/:payload", func(c *gin.Context) {
-		payload := c.Param("payload")
-		c.JSON(200, gin.H{
-			"payload": payload,
-		})
-		fmt.Println("payload is ", payload)
-	})
-	//getting string query params: expecting /query?database=postgres&queue=rabbit
-	r.GET("/query", func(c *gin.Context) {
-		//gets the query value for 'database' and returns the 2nd arg if its not there
-		db := c.DefaultQuery("database", "N/A")
-		queue := c.Query("queue")
-		fmt.Println("db is", db, "and queue is", queue)
-	})
+
+	//recover from code panics by sending a 500 status request
+	r.Use(gin.Recovery())
 
 	r.GET("/authenticate", func(c *gin.Context) {
 		// user := bard.User{}
@@ -59,7 +42,9 @@ func main() {
 		})
 	})
 
-	r.POST("/record", func(c *gin.Context) {
+	//authenticate tokens before handling the events
+	r.POST("/record", auth.AuthenticateToken(), func(c *gin.Context) {
+		fmt.Println("we're here in the function!")
 		//tried to use bindHeader to do this and couldn't get it to work
 		appName := c.GetHeader("appname")
 		if appName == "" {
@@ -89,17 +74,13 @@ func main() {
 }
 
 func send404Res(c *gin.Context, msg string) {
-	c.JSON(404, msg)
+	c.AbortWithStatusJSON(404, msg)
 }
 
 func send500Res(c *gin.Context, msg string) {
-	c.JSON(500, msg)
+	c.AbortWithStatusJSON(500, msg)
 }
 
 func send200Res(c *gin.Context, msg string) {
 	c.JSON(200, msg)
-}
-
-func send401Res(c *gin.Context, msg string) {
-	c.JSON(401, msg)
 }
