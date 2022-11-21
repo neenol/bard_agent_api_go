@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"launch_school/bard_agent_api/src/dataService/redis"
 	bard "launch_school/bard_agent_api/src/structs"
 	"launch_school/bard_agent_api/src/utils"
 
@@ -62,7 +63,11 @@ func GetSessionMetadata(sessionId string) (bard.PgSessionMetadata, error) {
 	return metadata, nil
 }
 
-func CreateNewSession(body bard.RecordBody, appName string) error {
+func CreateNewSession(
+	body bard.RecordBody,
+	appName string,
+	updateExistingSession func(bard.RecordBody) error,
+) error {
 	client, err := connect()
 	if err != nil {
 		return err
@@ -92,7 +97,15 @@ func CreateNewSession(body bard.RecordBody, appName string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	//add the session to the active cache
+	err = redis.AddSessionToActiveCache(sessionId)
+	if err != nil {
+		return err
+	}
+
+	//call this to update error counts and such after creation
+	return updateExistingSession(body)
 }
 
 func UpdateMostRecentEventTime(body bard.RecordBody) error {
