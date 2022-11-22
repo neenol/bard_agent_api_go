@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	bard "launch_school/bard_agent_api/src/structs"
 )
 
@@ -57,6 +56,5 @@ func isError(event map[string]interface{}) bool {
 	payloadLevel := dataPayload["level"]
 
 	eventType := uint64(event["type"].(float64))
-	fmt.Println("eventType", eventType, "payload level", payloadLevel)
 	return eventType == 6 && payloadLevel == "error"
 }
