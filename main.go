@@ -8,7 +8,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 
-	"launch_school/bard_agent_api/src/dataService"
+	"launch_school/bard_agent_api/src/bardDataService"
 	auth "launch_school/bard_agent_api/src/middleware"
 	bard "launch_school/bard_agent_api/src/structs"
 	// TODO: restructure repo so that this module path works
@@ -21,6 +21,13 @@ func main() {
 		fmt.Println("ERROR: failed to load environment variables.")
 	}
 	r := gin.Default()
+
+	//initialize our database connections
+	dataService, err := bardDataService.Init()
+	if err != nil {
+		fmt.Println("error! couldn't connect to databases")
+		panic(err)
+	}
 
 	//recover from code panics by sending a 500 status request
 	r.Use(gin.Recovery())

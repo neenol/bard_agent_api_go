@@ -12,17 +12,21 @@ import (
 	bard "launch_school/bard_agent_api/src/structs"
 )
 
-func SendEventsToQueue(body bard.RecordBody) error {
+type Client struct {
+	Connection *amqp.Connection
+	Channel    *amqp.Channel
+}
+
+func InitClient() (Client, error) {
+	client := Client{}
 	rabbit, err := amqp.Dial(fmt.Sprintf("amqp://%s:5672", os.Getenv("RABBITMQ_HOST")))
 	if err != nil {
-		return err
+		return client, err
 	}
-	defer rabbit.Close()
 	channel, err := rabbit.Channel()
 	if err != nil {
-		return err
+		return client, err
 	}
-	defer channel.Close()
 	if err := channel.ExchangeDeclare(
 		"test-exchange",
 		"fanout",
@@ -32,9 +36,16 @@ func SendEventsToQueue(body bard.RecordBody) error {
 		false,
 		nil,
 	); err != nil {
-		return err
+		return client, err
 	}
+	client.Channel = channel
+	client.Connection = rabbit
 	fmt.Println("Rabbit exchange created!")
+	return client, nil
+}
+
+func (client Client) SendEventsToQueue(body bard.RecordBody) error {
+
 	sessionId := body.SessionId
 	events := body.Events
 	for i := 0; i < len(events); i++ {
@@ -68,7 +79,7 @@ func SendEventsToQueue(body bard.RecordBody) error {
 		//publish the event
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		if err := channel.PublishWithContext(
+		if err := client.Channel.PublishWithContext(
 			ctx,
 			"test-exchange",
 			"",
