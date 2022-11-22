@@ -51,7 +51,6 @@ func main() {
 
 	//authenticate tokens before handling the events
 	r.POST("/record", auth.AuthenticateToken(), func(c *gin.Context) {
-		fmt.Println("we're here in the function!")
 		//tried to use bindHeader to do this and couldn't get it to work
 		appName := c.GetHeader("appname")
 		if appName == "" {

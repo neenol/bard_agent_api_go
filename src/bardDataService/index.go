@@ -1,8 +1,6 @@
 package bardDataService
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 
 	"launch_school/bard_agent_api/src/bardDataService/postgres"
@@ -40,13 +38,13 @@ func Init() (DataService, error) {
 func (ds DataService) HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	sessionId := body.SessionId
 	if redis.IsActiveSession(sessionId) {
-		fmt.Println("existing session")
+		//existing session
 		return ds.updateExistingSession(body)
 	} else if redis.IsEndedSession(sessionId) {
-		fmt.Println("ended session")
+		//ended session
 		return nil
 	} else {
-		fmt.Println("new session")
+		//new session
 		return ds.Postgres.CreateNewSession(body, appName, ds.updateExistingSession)
 	}
 }

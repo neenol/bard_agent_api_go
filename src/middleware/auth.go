@@ -12,7 +12,6 @@ import (
 func AuthenticateToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("authorization")
-		fmt.Println("auth header", authHeader)
 		if authHeader == "" {
 			send401Res(c, "couldn't authenticate: authorization header isn't populated")
 			return
@@ -44,7 +43,6 @@ func AuthenticateToken() gin.HandlerFunc {
 			send401Res(c, "invalid token: couldn't parse claims")
 			return
 		}
-		fmt.Println("auth successful!")
 		c.Next()
 	}
 

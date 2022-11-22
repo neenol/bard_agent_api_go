@@ -8,3 +8,8 @@ Just for fun, this branch will have a redis implementation. The goal will be to 
 
 `sudo service redis-server start` start redis
 `redis-cli ping`: check to see if the server is up.
+`redis-cli` takes you to a cli tool with lots of helpful commands
+
+- `get <key>` will give you the key
+- `set <key> <value>` will set the given key to the given value
+- `FLUSHALL async` will delete all keys
