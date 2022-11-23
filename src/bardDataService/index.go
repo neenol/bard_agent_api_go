@@ -10,14 +10,14 @@ import (
 	"launch_school/bard_agent_api/src/utils"
 )
 
-// test for this:
-// 4071c287-4b45-4367-8591-go-session  is in ch and pg. (ended)
-// 4071c287-4b45-4367-8591-node-session is just in ch. (ended)
-// 4071c287-4b45-4367-8590- is just in pg (existing)
-// bluh is in postgres
+// define a local DataService struct so I can attach methods to it.
+// I can still use this struct in other modules, I just can't include it
+// in my structs module with all the other custom structs I define... kind
+// of annoying.
 type DataService struct {
 	Postgres postgres.Client
 	Rabbit   rabbit.Client
+	Redis    redis.Client
 }
 
 /*	PUBLIC METHODS	*/
@@ -31,16 +31,18 @@ func Init() (DataService, error) {
 	if err != nil {
 		return dataService, err
 	}
+	redisClient := redis.ConnectToCaches()
 	dataService.Postgres = postgresClient
 	dataService.Rabbit = rabbitClient
+	dataService.Redis = redisClient
 	return dataService, nil
 }
 func (ds DataService) HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	sessionId := body.SessionId
-	if redis.IsActiveSession(sessionId) {
+	if ds.Redis.IsActiveSession(sessionId) {
 		//existing session
 		return ds.updateExistingSession(body)
-	} else if redis.IsEndedSession(sessionId) {
+	} else if ds.Redis.IsEndedSession(sessionId) {
 		//ended session
 		return nil
 	} else {
@@ -50,8 +52,13 @@ func (ds DataService) HandleEvents(c *gin.Context, body bard.RecordBody, appName
 }
 
 func (ds DataService) updateExistingSession(body bard.RecordBody) error {
-	//update most recent event time
-	if err := ds.Postgres.UpdateMostRecentEventTime(body); err != nil {
+	//update most recent event time in the cache
+	mostRecentEventTime, err := utils.GetTimestampFromEvent(body.Events[0])
+	if err != nil {
+		return err
+	}
+	sessionId := body.SessionId
+	if err := ds.Redis.UpdateMostRecentEventTime(sessionId, mostRecentEventTime); err != nil {
 		return err
 	}
 	//update error count

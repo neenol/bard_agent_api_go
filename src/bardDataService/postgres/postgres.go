@@ -6,15 +6,15 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"time"
 
-	"launch_school/bard_agent_api/src/bardDataService/redis"
 	bard "launch_school/bard_agent_api/src/structs"
 	"launch_school/bard_agent_api/src/utils"
 
 	_ "github.com/lib/pq"
 )
 
+// attach postgres methods to another client struct. makes for neater
+// syntax when I use those methods in the index.go data service file.
 type Client struct {
 	Db *sql.DB
 }
@@ -56,7 +56,7 @@ func (client Client) CreateNewSession(
 		return err
 	}
 	MAX_IDLE_TIME := body.MAX_IDLE_TIME
-	mostRecentEventTime := time.Now().UnixMilli()
+	mostRecentEventTime := startTime
 
 	query := `INSERT INTO pending_sessions
 						(session_id, start_time, most_recent_event_time, app_name, max_idle_time)
@@ -74,37 +74,8 @@ func (client Client) CreateNewSession(
 		return err
 	}
 
-	//add the session to the active cache
-	err = redis.AddSessionToActiveCache(sessionId)
-	if err != nil {
-		return err
-	}
-
 	//call this to update error counts and such after creation
 	return updateExistingSession(body)
-}
-
-func (client Client) UpdateMostRecentEventTime(body bard.RecordBody) error {
-	sessionId := body.SessionId
-	lastEvent := body.Events[len(body.Events)-1]
-	mostRecentEventTime, err := utils.GetTimestampFromEvent(lastEvent)
-	if err != nil {
-		return err
-	}
-
-	query := `UPDATE pending_sessions
-						SET most_recent_event_time=$1
-						WHERE session_id=$2;
-						`
-	_, err = client.Db.Exec(
-		query,
-		mostRecentEventTime,
-		sessionId,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (client Client) IncrementErrorCount(sessionId string, newErrorCount uint16) error {

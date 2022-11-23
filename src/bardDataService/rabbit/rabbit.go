@@ -12,6 +12,8 @@ import (
 	bard "launch_school/bard_agent_api/src/structs"
 )
 
+// attach rabbit methods to another client struct. makes for neater
+// syntax when I use those methods in the index.go data service file.
 type Client struct {
 	Connection *amqp.Connection
 	Channel    *amqp.Channel
