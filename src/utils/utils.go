@@ -6,6 +6,11 @@ import (
 )
 
 func GetTimestampFromEvent(event map[string]interface{}) (int64, error) {
+	//go knows that event is a map with string keys that can have anything
+	//as the values. but it doesn't know what keys are in it, or the types
+	//of the values. This type assertion tells go to parse the value of the
+	//"timestamp" key into a float64. if the "timestamp" key doesn't exist,
+	//or its value can't be parsed to a float64, throw an error.
 	timestampFloat, ok := event["timestamp"].(float64)
 	if !ok {
 		return 0, errors.New("failed to parse timestamp from event")

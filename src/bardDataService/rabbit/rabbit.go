@@ -56,11 +56,7 @@ func (client Client) SendEventsToQueue(body bard.RecordBody) error {
 		// 	sessionId: string,
 		// 	event: string
 		// }
-		//the event is a stringified json representation of the event. so we need to
-		// transform the event from a map into a json string
-		//build a message object
-		//turn that message object into a jso nstring
-		//turn that string into a byte array
+		//the event is a stringified json representation of the event.
 
 		//first, build the stringified json. marshall creates a byte array of the json string.
 		var eventMap = events[i]
@@ -68,7 +64,7 @@ func (client Client) SendEventsToQueue(body bard.RecordBody) error {
 		if err != nil {
 			return err
 		}
-		//turn the byte array back into a string. we need that for the message obj, NOT a byte arr
+		//turn the byte array into the json string it represents
 		eventJsonString := string(encodedEventJsonString)
 
 		//build and serialize the queue message

@@ -10,7 +10,7 @@ import (
 	"launch_school/bard_agent_api/src/utils"
 )
 
-// define a local DataService struct so I can attach methods to it.
+// define a local DataService struct so I can attach methods to it here.
 // I can still use this struct in other modules, I just can't include it
 // in my structs module with all the other custom structs I define... kind
 // of annoying.
@@ -37,6 +37,7 @@ func Init() (DataService, error) {
 	dataService.Redis = redisClient
 	return dataService, nil
 }
+
 func (ds DataService) HandleEvents(c *gin.Context, body bard.RecordBody, appName string) error {
 	sessionId := body.SessionId
 	if ds.Redis.IsActiveSession(sessionId) {

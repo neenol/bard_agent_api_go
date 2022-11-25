@@ -7,6 +7,8 @@ import (
 	r "github.com/go-redis/redis/v8"
 )
 
+// we've got TWO redis databases in play here: one for active sessions, one
+// for inactive sessions
 const ACTIVE_SESSION_DB = 1
 const ENDED_SESSION_DB = 2
 
@@ -45,6 +47,7 @@ func (client Client) isKeyInRedis(
 	sessionId string,
 	checkingActiveCache bool,
 ) bool {
+	//go doesn't have a tenary operator, so need this helper method
 	cache := client.getCache(checkingActiveCache)
 
 	_, err := cache.Get(context.Background(), sessionId).Result()
