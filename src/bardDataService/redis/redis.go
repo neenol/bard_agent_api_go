@@ -47,14 +47,12 @@ func (client Client) isKeyInRedis(
 	sessionId string,
 	checkingActiveCache bool,
 ) bool {
-	//go doesn't have a tenary operator, so need this helper method
 	cache := client.getCache(checkingActiveCache)
 
 	_, err := cache.Get(context.Background(), sessionId).Result()
 
 	//if err is this special value, it means the key isn't in redis
 	if err == r.Nil {
-		//fmt.Printf("%s isn't in the cache we're checking. active cache?: %t\n", sessionId, checkingActiveCache)
 		return false
 	} else if err != nil {
 		fmt.Println("redis fetch failed!")

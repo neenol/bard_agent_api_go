@@ -11,9 +11,6 @@ import (
 	"launch_school/bard_agent_api/src/bardDataService"
 	auth "launch_school/bard_agent_api/src/middleware"
 	bard "launch_school/bard_agent_api/src/structs"
-	// TODO: restructure repo so that this module path works
-	// "github.com/neenol/bard_agent_api_go/src/structs"
-	// "github.com/neenol/bard_agent_api_go/src/structs"
 )
 
 func main() {
@@ -29,9 +26,6 @@ func main() {
 		fmt.Println("error! couldn't connect to databases")
 		panic(err)
 	}
-
-	//recover from code panics by sending a 500 status request
-	r.Use(gin.Recovery())
 
 	r.GET("/authenticate", func(c *gin.Context) {
 		//create a token
@@ -55,16 +49,13 @@ func main() {
 
 	//use middleware to authenticate tokens before handling events
 	r.POST("/record", auth.AuthenticateToken(), func(c *gin.Context) {
-		//tried to use bindHeader to do this and couldn't get it to work
 		appName := c.GetHeader("appname")
 		if appName == "" {
 			send404Res(c, "Bad request: no appname header")
 			return
 		}
 
-		//get the body. BindJSON attempts to take the request body and cram
-		//it into a bard.RecordBody object. Should work as long as the body has
-		//the fields the object is expecting.
+		//get the body.
 		var body bard.RecordBody
 		if err := c.BindJSON(&body); err != nil {
 			msg := fmt.Sprintf("Bad request: invalid body. %s", err)

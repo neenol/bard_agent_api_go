@@ -11,9 +11,6 @@ import (
 )
 
 // define a local DataService struct so I can attach methods to it here.
-// I can still use this struct in other modules, I just can't include it
-// in my structs module with all the other custom structs I define... kind
-// of annoying.
 type DataService struct {
 	Postgres postgres.Client
 	Rabbit   rabbit.Client
@@ -52,6 +49,7 @@ func (ds DataService) HandleEvents(c *gin.Context, body bard.RecordBody, appName
 	}
 }
 
+/*	PRIVATE METHODS	*/
 func (ds DataService) updateExistingSession(body bard.RecordBody) error {
 	//update most recent event time in the cache
 	mostRecentEventTime, err := utils.GetTimestampFromEvent(body.Events[0])

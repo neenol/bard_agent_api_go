@@ -46,6 +46,7 @@ func InitClient() (Client, error) {
 	return client, nil
 }
 
+/*	PUBLIC METHODS	*/
 func (client Client) SendEventsToQueue(body bard.RecordBody) error {
 
 	sessionId := body.SessionId

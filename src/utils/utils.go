@@ -43,13 +43,8 @@ are errors to look like this (parts we don't are about here are omitted)
 		}
 		type: 6
 	}
-
-There's probably a better way to parse this, but I found this one first.
 */
 func isError(event map[string]interface{}) bool {
-	//use a bunch of type assertions to tell go that these keys in the
-	//event map contain other maps. If the keys don't have values, then
-	//the result is just nil.
 	eventData := event["data"].(map[string]interface{})
 	if eventData["payload"] == nil {
 		return false

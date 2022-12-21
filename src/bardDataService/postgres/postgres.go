@@ -1,7 +1,5 @@
 package postgres
 
-//database/sql is a go skeleton package that has unimplemented methods for talking to dbs
-//lib/pq package tells database/sql the specifics of how to talk to postgres
 import (
 	"database/sql"
 	"fmt"
