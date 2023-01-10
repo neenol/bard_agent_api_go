@@ -18,9 +18,9 @@ func AuthenticateToken() gin.HandlerFunc {
 		}
 		tokenString := strings.Split(authHeader, " ")[1]
 
-		//parse our token
+		//parse our token. populates the sig and sets a boolean indicating its valid
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			//need to make sure the token is signed with the algo we expect
+			//use a type assertion to make sure the method we used to sign this token is what we expect
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("error parsing the token")
 			}
@@ -33,6 +33,7 @@ func AuthenticateToken() gin.HandlerFunc {
 			return
 		}
 
+		//use a type assertion to make sure the claims are in the format we expect
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			send401Res(c, "invalid token: couldn't parse claims")
